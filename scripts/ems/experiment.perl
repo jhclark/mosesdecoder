@@ -123,7 +123,8 @@ sub init_agenda_graph() {
 		."(its all gone blank...) show\n"
 		."showpage\n";
     close(PS);
-    `convert $graph_file.ps $graph_file.png`;
+
+    `convert -alpha off $graph_file.ps $graph_file.png`;
 
     if (!$NO_GRAPH && !fork) {
 	# use ghostview by default, it it is installed
@@ -864,7 +865,7 @@ sub draw_agenda_graph {
     close(DOT);
     my $graph_file = &steps_file("graph.$VERSION",$VERSION);
     `dot -Tps $graph_file.dot >$graph_file.ps`;
-    `convert $graph_file.ps $graph_file.png`;
+    `convert -alpha off $graph_file.ps $graph_file.png`;
 }
 
 sub define_step {
@@ -1290,7 +1291,8 @@ sub check_if_crashed {
 			     'error','killed','core dumped','can\'t read',
 			     'no such file or directory','unknown option',
 			     'died at','exit code','permission denied',
-           "Can't locate") {
+           'segmentation fault','abort',
+           'can\'t locate') {
 	    if (/$pattern/i) {
 		my $not_error = 0;
 		if (defined($NOT_ERROR{&defined_step_id($i)})) {
@@ -2480,12 +2482,7 @@ sub define_template {
 	    my $extra = join(" ",@EXTRA);
 
 	    if (&backoff_and_get(&extend_local_name($module,$set,$command))) {
-		if ($command eq "input-tokenizer") {
-		    $cmd .= "\$$command -r $VERSION -o $out < $in > $out $extra\n";
-		}
-		else {
 		    $cmd .= "\$$command < $in > $out $extra\n";
-		}
 	    }
 	    else {
 		$cmd .= "ln -s $in $out\n";
@@ -2555,7 +2552,7 @@ sub define_template {
     $cmd =~ s/OUT/$output/g;
     $cmd =~ s/VERSION/$VERSION/g;
     print "\tcmd is $cmd\n" if $VERBOSE;
-    while ($cmd =~ /^([\S\s]*)\$([^\s\/]+)([\S\s]*)$/) {
+    while ($cmd =~ /^([\S\s]*)\$([^\s\/\"\']+)([\S\s]*)$/) {
 	my ($pre,$variable,$post) = ($1,$2,$3);
 	$cmd = $pre
 	    . &check_backoff_and_get(&extend_local_name($module,$set,$variable))

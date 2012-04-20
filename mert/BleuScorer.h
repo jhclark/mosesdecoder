@@ -51,6 +51,11 @@ public:
 
   void DumpCounts(std::ostream* os, const NgramCounts& counts) const;
 
+  bool OpenReference(const char* filename, size_t file_id);
+
+  // NOTE: this function is used for unit testing.
+  bool OpenReferenceStream(std::istream* is, size_t file_id);
+
 private:
   ReferenceLengthType m_ref_length_type;
 
@@ -61,5 +66,10 @@ private:
   BleuScorer(const BleuScorer&);
   BleuScorer& operator=(const BleuScorer&);
 };
+
+/** Computes sentence-level BLEU+1 score.
+ * This function is used in PRO.
+ */
+float sentenceLevelBleuPlusOne(const vector<float>& stats);
 
 #endif  // MERT_BLEU_SCORER_H_
